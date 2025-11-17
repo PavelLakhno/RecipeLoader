@@ -3,73 +3,6 @@
 //  RecipeLoader
 //
 //  Created by user on 12.11.2025.
-//
-//
-//import UIKit
-//
-//class RecipeTableViewCell: UITableViewCell {
-//    
-//    private let titleLabel: UILabel = {
-//        let label = UILabel()
-//        label.font = UIFont.boldSystemFont(ofSize: 16)
-//        label.numberOfLines = 2
-//        label.translatesAutoresizingMaskIntoConstraints = false
-//        return label
-//    }()
-//    
-//    private let sourceLabel: UILabel = {
-//        let label = UILabel()
-//        label.font = UIFont.systemFont(ofSize: 12)
-//        label.textColor = .systemGray
-//        label.translatesAutoresizingMaskIntoConstraints = false
-//        return label
-//    }()
-//    
-//    private let descriptionLabel: UILabel = {
-//        let label = UILabel()
-//        label.font = UIFont.systemFont(ofSize: 14)
-//        label.textColor = .systemGray2
-//        label.numberOfLines = 2
-//        label.translatesAutoresizingMaskIntoConstraints = false
-//        return label
-//    }()
-//    
-//    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
-//        super.init(style: style, reuseIdentifier: reuseIdentifier)
-//        setupUI()
-//    }
-//    
-//    required init?(coder: NSCoder) {
-//        fatalError("init(coder:) has not been implemented")
-//    }
-//    
-//    private func setupUI() {
-//        contentView.addSubview(titleLabel)
-//        contentView.addSubview(sourceLabel)
-//        contentView.addSubview(descriptionLabel)
-//        
-//        NSLayoutConstraint.activate([
-//            titleLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 8),
-//            titleLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-//            titleLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
-//            
-//            sourceLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 4),
-//            sourceLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-//            sourceLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
-//            
-//            descriptionLabel.topAnchor.constraint(equalTo: sourceLabel.bottomAnchor, constant: 4),
-//            descriptionLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-//            descriptionLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
-//            descriptionLabel.bottomAnchor.constraint(lessThanOrEqualTo: contentView.bottomAnchor, constant: -8)
-//        ])
-//    }
-//    
-//    func configure(with recipe: Recipe) {
-//        titleLabel.text = recipe.title
-//        sourceLabel.text = "Источник: \(recipe.source)"
-//        descriptionLabel.text = recipe.description
-//    }
-//}
 
 import UIKit
 
@@ -149,12 +82,17 @@ class RecipeTableViewCell: UITableViewCell {
   
     func configure(with recipe: Recipe) {
         titleLabel.text = recipe.title
-        sourceLabel.text = "📝 \(recipe.source)"
         
-        // Основное описание
+        // Формируем строку с источником и датой
+        var sourceText = "📝 \(recipe.source)"
+        if let addedDate = recipe.addedDate {
+            sourceText += " • 📅 \(addedDate)"
+        }
+        sourceLabel.text = sourceText
+        
+        // Остальной код без изменений...
         var descriptionText = recipe.description ?? ""
         
-        // Дополнительная информация для ячейки
         var additionalInfo: [String] = []
         
         if let cookingTime = recipe.cookingTime {
@@ -166,12 +104,10 @@ class RecipeTableViewCell: UITableViewCell {
         }
         
         if let categories = recipe.categories, !categories.isEmpty {
-            // Берем только первые 2 категории для компактности
             let mainCategories = Array(categories.prefix(2))
             additionalInfo.append("📁 \(mainCategories.joined(separator: ", "))")
         }
         
-        // Формируем итоговый текст
         if !additionalInfo.isEmpty {
             if !descriptionText.isEmpty {
                 descriptionText += "\n"

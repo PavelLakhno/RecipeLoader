@@ -7,75 +7,6 @@
 
 import Foundation
 
-//struct Recipe {
-//    // Старые поля (оставляем для совместимости)
-//    let title: String
-//    let source: String
-//    let url: String
-//    let imageUrl: String?
-//    let description: String?
-//    
-//    // Новые поля (делаем опциональными)
-//    let id: String?
-//    let categories: [String]?
-//    let ingredients: [Ingredient]?
-//    let nutrition: NutritionInfo?
-//    let instructions: [InstructionStep]?
-//    let tags: [String]?
-//    let cookingTime: String?
-//    let servings: String?
-//    
-//    // Инициализатор для старых рецептов (из списка)
-//    init(title: String, source: String, url: String, imageUrl: String? = nil, description: String? = nil) {
-//        self.title = title
-//        self.source = source
-//        self.url = url
-//        self.imageUrl = imageUrl
-//        self.description = description
-//        
-//        // Новые поля - nil по умолчанию
-//        self.id = nil
-//        self.categories = nil
-//        self.ingredients = nil
-//        self.nutrition = nil
-//        self.instructions = nil
-//        self.tags = nil
-//        self.cookingTime = nil
-//        self.servings = nil
-//    }
-//    
-//    // Инициализатор для детальных рецептов
-//    init(
-//        id: String,
-//        title: String,
-//        source: String,
-//        url: String,
-//        imageUrl: String? = nil,
-//        description: String,
-//        categories: [String],
-//        ingredients: [Ingredient],
-//        nutrition: NutritionInfo?,
-//        instructions: [InstructionStep],
-//        tags: [String],
-//        cookingTime: String?,
-//        servings: String?
-//    ) {
-//        self.id = id
-//        self.title = title
-//        self.source = source
-//        self.url = url
-//        self.imageUrl = imageUrl
-//        self.description = description
-//        self.categories = categories
-//        self.ingredients = ingredients
-//        self.nutrition = nutrition
-//        self.instructions = instructions
-//        self.tags = tags
-//        self.cookingTime = cookingTime
-//        self.servings = servings
-//    }
-//}
-
 struct Recipe {
     let id: String?
     let title: String
@@ -91,10 +22,11 @@ struct Recipe {
     let cookingTime: String?
     let servings: String?
     let cuisine: String?
+    let addedDate: String?
     
     // Инициализатор для списка рецептов
     init(title: String, source: String, url: String, imageUrl: String? = nil, description: String? = nil,
-         categories: [String]? = nil, tags: [String]? = nil, cookingTime: String? = nil, servings: String? = nil) {
+         categories: [String]? = nil, tags: [String]? = nil, cookingTime: String? = nil, servings: String? = nil, addedDate: String? = nil) {
         self.id = nil
         self.title = title
         self.source = source
@@ -109,12 +41,13 @@ struct Recipe {
         self.ingredients = nil
         self.nutrition = nil
         self.instructions = nil
+        self.addedDate = addedDate
     }
     
     // Инициализатор для детальных рецептов
     init(id: String, title: String, source: String, url: String, imageUrl: String? = nil, description: String,
          categories: [String], ingredients: [Ingredient], nutrition: NutritionInfo?, instructions: [InstructionStep],
-         tags: [String], cookingTime: String?, servings: String?, cuisine: String?) {
+         tags: [String], cookingTime: String?, servings: String?, cuisine: String?, addedDate: String?) {
         self.id = id
         self.title = title
         self.source = source
@@ -129,6 +62,13 @@ struct Recipe {
         self.cookingTime = cookingTime
         self.servings = servings
         self.cuisine = cuisine
+        self.addedDate = addedDate
+    }
+}
+
+extension Recipe {
+    var isDetailed: Bool {
+        return id != nil && ingredients != nil
     }
 }
 
