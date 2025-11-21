@@ -6,11 +6,11 @@
 //
 
 import UIKit
-import SwiftSoup
 
 class RecipeDetailViewController: UIViewController {
     
     private var recipe: Recipe
+    private let recipeSource: RecipeSource
     private let scrollView = UIScrollView()
     private let contentView = UIView()
     private var activityIndicator: UIActivityIndicatorView!
@@ -29,8 +29,9 @@ class RecipeDetailViewController: UIViewController {
     private let tagsLabel = UILabel()
     private let infoLabel = UILabel()
     
-    init(recipe: Recipe) {
+    init(recipe: Recipe, recipeSource: RecipeSource) {
         self.recipe = recipe
+        self.recipeSource = recipeSource
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -85,9 +86,9 @@ class RecipeDetailViewController: UIViewController {
         contentView.addSubview(descriptionLabel)
         
         infoLabel.font = UIFont.systemFont(ofSize: 14)
+        infoLabel.numberOfLines = 0
         infoLabel.textColor = .systemOrange
         infoLabel.translatesAutoresizingMaskIntoConstraints = false
-        
         contentView.addSubview(infoLabel)
         
         // Категории
@@ -231,11 +232,19 @@ class RecipeDetailViewController: UIViewController {
                 .withTintColor(.systemGray3, renderingMode: .alwaysOriginal)
         }
         
-        // Описание
+        // Описание - ДОБАВЬТЕ ПОДРОБНУЮ ОТЛАДКУ
+        print("=== DISPLAY RECIPE DEBUG ===")
+        print("🔍 recipe.description: \(recipe.description ?? "nil")")
+        print("🔍 descriptionLabel до установки: \(descriptionLabel.text ?? "nil")")
+        
         descriptionLabel.text = recipe.description ?? "Описание отсутствует"
         
+        print("🔍 descriptionLabel после установки: \(descriptionLabel.text ?? "nil")")
+        print("🔍 descriptionLabel isHidden: \(descriptionLabel.isHidden)")
+        print("🔍 descriptionLabel frame: \(descriptionLabel.frame)")
+        print("=== END DEBUG ===")
+        
         updateAdditionalInfo()
-
         
         // Категории
         if let categories = recipe.categories, !categories.isEmpty {
@@ -307,47 +316,7 @@ class RecipeDetailViewController: UIViewController {
             nutritionTitleLabel.isHidden = true
         }
     }
-  
-    private func loadDetailedRecipeIfNeeded() {
-        // Если у нас уже есть детальная информация, не загружаем повторно
-        guard !recipe.isDetailed else { return }
-        
-        activityIndicator.startAnimating()
-        
-        guard let url = URL(string: recipe.url) else {
-            activityIndicator.stopAnimating()
-            return
-        }
-        
-        var request = URLRequest(url: url)
-        request.setValue("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Safari/605.1.15", forHTTPHeaderField: "User-Agent")
-        
-        let task = URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
-            guard let self = self else { return }
-            
-            DispatchQueue.main.async {
-                self.activityIndicator.stopAnimating()
-            }
-            
-            guard let data = data,
-                  let html = String(data: data, encoding: .windowsCP1251) else {
-                print("❌ Не удалось загрузить детальную страницу")
-                return
-            }
-            
-            if let detailedRecipe = RecipeDetailParser.parseDetailedRecipe(from: html, url: self.recipe.url) {
-                DispatchQueue.main.async {
-                    self.recipe = detailedRecipe
-                    // ОБНОВЛЯЕМ ВСЮ ИНФОРМАЦИЮ
-                    self.updateAdditionalInfo()
-                    self.displayDetailedInfo()
-                    print("✅ Обновлен интерфейс с детальной информацией для: \(detailedRecipe.title)")
-                }
-            }
-        }
-        task.resume()
-    }
-
+    
     private func displayIngredients(_ ingredients: [Ingredient]) {
         ingredientsStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
         
@@ -365,6 +334,7 @@ class RecipeDetailViewController: UIViewController {
         nameLabel.font = UIFont.systemFont(ofSize: 16)
         nameLabel.textColor = .label
         nameLabel.text = ingredient.name
+        nameLabel.numberOfLines = 0
         nameLabel.translatesAutoresizingMaskIntoConstraints = false
         
         let amountLabel = UILabel()
@@ -372,6 +342,8 @@ class RecipeDetailViewController: UIViewController {
         amountLabel.textColor = .systemGreen
         amountLabel.text = ingredient.amount
         amountLabel.textAlignment = .right
+        amountLabel.numberOfLines = 0
+        amountLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
         amountLabel.translatesAutoresizingMaskIntoConstraints = false
         
         container.addSubview(nameLabel)
@@ -379,14 +351,14 @@ class RecipeDetailViewController: UIViewController {
         
         NSLayoutConstraint.activate([
             nameLabel.leadingAnchor.constraint(equalTo: container.leadingAnchor),
-            nameLabel.centerYAnchor.constraint(equalTo: container.centerYAnchor),
-            nameLabel.trailingAnchor.constraint(lessThanOrEqualTo: amountLabel.leadingAnchor, constant: -8),
+            nameLabel.topAnchor.constraint(equalTo: container.topAnchor, constant: 4),
+            nameLabel.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -4),
+            nameLabel.trailingAnchor.constraint(lessThanOrEqualTo: amountLabel.leadingAnchor, constant: -12),
             
             amountLabel.trailingAnchor.constraint(equalTo: container.trailingAnchor),
-            amountLabel.centerYAnchor.constraint(equalTo: container.centerYAnchor),
-            amountLabel.widthAnchor.constraint(lessThanOrEqualToConstant: 100),
-            
-            container.heightAnchor.constraint(equalToConstant: 24)
+            amountLabel.topAnchor.constraint(equalTo: container.topAnchor, constant: 4),
+            amountLabel.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -4),
+            amountLabel.widthAnchor.constraint(lessThanOrEqualToConstant: 120)
         ])
         
         return container
@@ -464,8 +436,10 @@ class RecipeDetailViewController: UIViewController {
         ]
         
         for (title, value) in nutritionItems {
-            let nutritionView = createNutritionView(title: title, value: value)
-            nutritionStackView.addArrangedSubview(nutritionView)
+            if !value.isEmpty {
+                let nutritionView = createNutritionView(title: title, value: value)
+                nutritionStackView.addArrangedSubview(nutritionView)
+            }
         }
         
         // Добавим значения на 100г, если есть
@@ -475,6 +449,11 @@ class RecipeDetailViewController: UIViewController {
             per100gLabel.textColor = .systemGray
             per100gLabel.text = "На 100г: \(nutrition.caloriesPer100g) ккал"
             nutritionStackView.addArrangedSubview(per100gLabel)
+        }
+        
+        // Если нет данных о питании, скрываем секцию
+        if nutritionStackView.arrangedSubviews.isEmpty {
+            nutritionTitleLabel.isHidden = true
         }
     }
     
@@ -517,22 +496,100 @@ class RecipeDetailViewController: UIViewController {
         let targetImageView = imageView ?? self.imageView
         
         DispatchQueue.global(qos: .utility).async {
-            do {
-                let data = try Data(contentsOf: url)
-                if let image = UIImage(data: data) {
-                    DispatchQueue.main.async {
-                        UIView.transition(with: targetImageView,
-                                        duration: 0.3,
-                                        options: .transitionCrossDissolve,
-                                        animations: {
-                                            targetImageView.image = image
-                                        },
-                                        completion: nil)
-                    }
+            if let data = try? Data(contentsOf: url), let image = UIImage(data: data) {
+                DispatchQueue.main.async {
+                    UIView.transition(with: targetImageView,
+                                      duration: 0.3,
+                                      options: .transitionCrossDissolve,
+                                      animations: {
+                        targetImageView.image = image
+                    },
+                                      completion: nil)
                 }
-            } catch {
-                print("❌ Ошибка загрузки изображения: \(error)")
+            } else {
+                print("❌ Ошибка загрузки изображения: \(urlString)")
             }
         }
     }
+    
+    private func loadDetailedRecipeIfNeeded() {
+        // Если у нас уже есть детальная информация, не загружаем повторно
+        guard !recipe.isDetailed else { return }
+        
+        activityIndicator.startAnimating()
+        
+        NetworkManager.shared.fetchHTML(from: recipe.url) { [weak self] result in
+            guard let self = self else { return }
+            
+            DispatchQueue.main.async {
+                self.activityIndicator.stopAnimating()
+            }
+            
+            switch result {
+            case .success(let html):
+                if let detailedRecipe = self.recipeSource.parseDetailedRecipe(from: html, url: self.recipe.url) {
+                    DispatchQueue.main.async {
+                        // Создаем обновленный рецепт, сохраняя существующие данные
+                        let updatedRecipe = self.createUpdatedRecipe(
+                            current: self.recipe,
+                            detailed: detailedRecipe
+                        )
+                        
+                        print("🔄 Обновление рецепта:")
+                        print("   - Старое описание: \(self.recipe.description ?? "nil")")
+                        print("   - Новое описание: \(detailedRecipe.description ?? "nil")")
+                        print("   - Итоговое описание: \(updatedRecipe.description ?? "nil")")
+                        
+                        self.recipe = updatedRecipe
+                        self.displayRecipe()
+                        
+                        // Принудительное обновление layout
+                        self.view.setNeedsLayout()
+                        self.view.layoutIfNeeded()
+                        
+                        print("✅ Обновлен интерфейс с детальной информацией для: \(updatedRecipe.title)")
+                    }
+                }
+                
+            case .failure(let error):
+                print("❌ Ошибка загрузки детальной страницы: \(error)")
+            }
+        }
+    }
+    
+    private func createUpdatedRecipe(current: Recipe, detailed: Recipe) -> Recipe {
+        // Сохраняем существующие данные, если в детальном рецепте их нет
+        let finalDescription = detailed.description ?? current.description
+        let finalImageUrl = detailed.imageUrl ?? current.imageUrl
+        let finalCategories = !detailed.categories!.isEmpty ? detailed.categories : current.categories
+        let finalCookingTime = detailed.cookingTime ?? current.cookingTime
+        let finalServings = detailed.servings ?? current.servings
+        let finalCuisine = detailed.cuisine ?? current.cuisine
+        let finalAddedDate = detailed.addedDate ?? current.addedDate
+        
+        // Используем детальные данные для ингредиентов, инструкций и питания
+        let finalIngredients = !detailed.ingredients!.isEmpty ? detailed.ingredients : current.ingredients
+        let finalInstructions = !detailed.instructions!.isEmpty ? detailed.instructions : current.instructions
+        let finalNutrition = detailed.nutrition ?? current.nutrition
+        let finalTags = !detailed.tags!.isEmpty ? detailed.tags : current.tags
+        
+        return Recipe(
+            id: detailed.id ?? current.id ?? UUID().uuidString,
+            title: detailed.title.isEmpty ? current.title : detailed.title,
+            source: current.source, // Сохраняем оригинальный источник
+            url: current.url, // Сохраняем оригинальный URL
+            imageUrl: finalImageUrl,
+            description: finalDescription,
+            categories: finalCategories ?? [],
+            ingredients: finalIngredients ?? [],
+            nutrition: finalNutrition,
+            instructions: finalInstructions ?? [],
+            tags: finalTags ?? [],
+            cookingTime: finalCookingTime,
+            servings: finalServings,
+            cuisine: finalCuisine,
+            addedDate: finalAddedDate
+        )
+    }
 }
+

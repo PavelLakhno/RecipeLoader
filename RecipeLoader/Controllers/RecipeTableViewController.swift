@@ -11,6 +11,7 @@ import UIKit
 class RecipeTableViewController: UITableViewController {
     
     // MARK: - Properties
+    var recipeSource: RecipeSource!
     private var recipes: [Recipe] = []
     private let activityIndicator = UIActivityIndicatorView(style: .large)
     private var isLoading = false
@@ -26,7 +27,7 @@ class RecipeTableViewController: UITableViewController {
     
     // MARK: - UI Setup
     private func setupUI() {
-        title = "🍳 Povarenok.ru Рецепты"
+        title = recipeSource.name
         setupTableView()
         setupActivityIndicator()
         setupNavigationBar()
@@ -67,9 +68,8 @@ class RecipeTableViewController: UITableViewController {
         isLoading = true
         activityIndicator.startAnimating()
         
-        let urlString = page == 1 ?
-            "https://www.povarenok.ru/recipes/" :
-            "https://www.povarenok.ru/recipes/~\(page)/"
+        let urlString = recipeSource.buildListURL(page: page)
+        print("🔗 Загружаем: \(urlString)")
         
         NetworkManager.shared.fetchHTML(from: urlString) { [weak self] result in
             guard let self = self else { return }
@@ -81,7 +81,7 @@ class RecipeTableViewController: UITableViewController {
             
             switch result {
             case .success(let html):
-                let newRecipes = RecipeParser.parseRecipes(from: html, baseURL: "https://www.povarenok.ru")
+                let newRecipes = self.recipeSource.parseRecipes(from: html)
                 self.handleNewRecipes(newRecipes, page: page)
                 
             case .failure(let error):
@@ -95,6 +95,7 @@ class RecipeTableViewController: UITableViewController {
             if page == 1 {
                 self.recipes = newRecipes
                 self.tableView.reloadData()
+                print("✅ Первая страница загружена: \(newRecipes.count) рецептов")
             } else {
                 let existingTitles = Set(self.recipes.map { $0.title })
                 let uniqueRecipes = newRecipes.filter { !existingTitles.contains($0.title) }
@@ -107,11 +108,16 @@ class RecipeTableViewController: UITableViewController {
                         IndexPath(row: $0, section: 0)
                     }
                     self.tableView.insertRows(at: indexPaths, with: .automatic)
+                    print("✅ Добавлено \(uniqueRecipes.count) новых рецептов. Всего: \(self.recipes.count)")
                 }
             }
             
             self.currentPage = page
             self.hasMoreRecipes = !newRecipes.isEmpty
+            
+            if !self.hasMoreRecipes {
+                print("🎉 Загружены все доступные рецепты!")
+            }
         }
     }
     
@@ -143,7 +149,7 @@ class RecipeTableViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         let recipe = recipes[indexPath.row]
-        let detailVC = RecipeDetailViewController(recipe: recipe)
+        let detailVC = RecipeDetailViewController(recipe: recipe, recipeSource: recipeSource)
         navigationController?.pushViewController(detailVC, animated: true)
     }
 }

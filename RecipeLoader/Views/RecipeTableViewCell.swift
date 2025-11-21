@@ -25,15 +25,6 @@ class RecipeTableViewCell: UITableViewCell {
         return label
     }()
     
-    private let descriptionLabel: UILabel = {
-        let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 14)
-        label.textColor = .systemGray2
-        label.numberOfLines = 2
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
-    
     private let recipeImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFill
@@ -57,7 +48,6 @@ class RecipeTableViewCell: UITableViewCell {
         contentView.addSubview(recipeImageView)
         contentView.addSubview(titleLabel)
         contentView.addSubview(sourceLabel)
-        contentView.addSubview(descriptionLabel)
         
         NSLayoutConstraint.activate([
             recipeImageView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 12),
@@ -72,12 +62,16 @@ class RecipeTableViewCell: UITableViewCell {
             sourceLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 4),
             sourceLabel.leadingAnchor.constraint(equalTo: recipeImageView.trailingAnchor, constant: 12),
             sourceLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -12),
-            
-            descriptionLabel.topAnchor.constraint(equalTo: sourceLabel.bottomAnchor, constant: 4),
-            descriptionLabel.leadingAnchor.constraint(equalTo: recipeImageView.trailingAnchor, constant: 12),
-            descriptionLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -12),
-            descriptionLabel.bottomAnchor.constraint(lessThanOrEqualTo: contentView.bottomAnchor, constant: -12)
+
         ])
+    }
+    
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        
+        titleLabel.text = ""
+        sourceLabel.text = ""
+        recipeImageView.image = nil
     }
   
     func configure(with recipe: Recipe) {
@@ -114,8 +108,6 @@ class RecipeTableViewCell: UITableViewCell {
             }
             descriptionText += additionalInfo.joined(separator: " • ")
         }
-        
-        descriptionLabel.text = descriptionText.isEmpty ? "Рецепт с \(recipe.source)" : descriptionText
         
         // Загрузка изображения
         recipeImageView.image = UIImage(systemName: "photo")?

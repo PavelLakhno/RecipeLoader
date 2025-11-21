@@ -45,7 +45,7 @@ struct Recipe {
     }
     
     // Инициализатор для детальных рецептов
-    init(id: String, title: String, source: String, url: String, imageUrl: String? = nil, description: String,
+    init(id: String, title: String, source: String, url: String, imageUrl: String? = nil, description: String?,
          categories: [String], ingredients: [Ingredient], nutrition: NutritionInfo?, instructions: [InstructionStep],
          tags: [String], cookingTime: String?, servings: String?, cuisine: String?, addedDate: String?) {
         self.id = id

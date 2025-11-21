@@ -14,9 +14,10 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let windowScene = (scene as? UIWindowScene) else { return }
         
         window = UIWindow(windowScene: windowScene)
-        let recipeVC = RecipeTableViewController()
-        let navigationController = UINavigationController(rootViewController: recipeVC)
-        window?.rootViewController = navigationController
+//        let recipeVC = RecipeTableViewController()
+//        let navigationController = UINavigationController(rootViewController: recipeVC)
+        
+        window?.rootViewController = MainTabBarController()
         window?.makeKeyAndVisible()
     }
 }
